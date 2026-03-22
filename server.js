@@ -127,10 +127,26 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// POST /api/logout - Logout user
+app.post('/api/logout', (req, res) => {
+    if (!req.session) {
+        return res.json({ message: 'Logout successful' });
+    }
+
+    req.session.destroy((error) => {
+        if (error) {
+            console.error('Error destroying session:', error);
+            return res.status(500).json({ error: 'Failed to logout user' });
+        }
+
+        res.json({ message: 'Logout successful' });
+    });
+});
+
 // PROJECT ROUTES
 
 // GET /api/projects - Get all projects
-app.get('/api/projects', async (req, res) => {
+app.get('/api/projects', requireAuth, async (req, res) => {
     try {
         const projects = await Project.findAll();
         res.json(projects);
