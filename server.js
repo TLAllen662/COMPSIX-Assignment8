@@ -26,6 +26,30 @@ async function testConnection() {
 
 testConnection();
 
+// Authentication middleware
+async function requireAuth(req, res, next) {
+    try {
+        if (!req.session || !req.session.userId) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const user = await User.findByPk(req.session.userId, {
+            attributes: ['id', 'username', 'email']
+        });
+
+        if (!user) {
+            req.session.destroy(() => {});
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error('Error in authentication middleware:', error);
+        res.status(500).json({ error: 'Authentication check failed' });
+    }
+}
+
 // AUTH ROUTES
 
 // POST /api/register - Register new user
